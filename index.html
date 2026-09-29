@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GENITUS BILANZ-SCREENER</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f4f7fb;--surface:#ffffff;--panel:#ffffff;--border:#d9e2ec;--accent:#0e7490;--gold:#b45309;--green:#15803d;--red:#b91c1c;--muted:#52606d;--text:#1e293b;--bright:#0f172a;--mono:'Space Mono',monospace;--sans:'Rajdhani',sans-serif;}
+    :root.dark-theme{--bg:#080c10;--surface:#0d1117;--panel:#111820;--border:#1e2d3d;--accent:#00d4ff;--gold:#f0c040;--green:#00ff88;--red:#ff3b5c;--muted:#7d92a8;--text:#c8d8e8;--bright:#ffffff;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;min-height:100vh;transition:background .25s,color .25s;}
+    header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:200;}
+    .logo{display:flex;align-items:center;gap:12px;}
+    .logo-mark{width:32px;height:32px;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;color:var(--accent);}
+    .logo-text{font-family:var(--mono);font-size:13px;letter-spacing:3px;color:var(--bright);}
+    .logo-sub{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);display:block;margin-top:1px;}
+    #themeToggleBtn{background:none;border:1px solid var(--border);color:var(--accent);width:30px;height:30px;border-radius:2px;cursor:pointer;font-size:14px;}
+    .cache-badge{font-family:var(--mono);font-size:9px;letter-spacing:1px;padding:3px 8px;border:1px solid var(--accent);color:var(--accent);border-radius:2px;text-transform:uppercase;}
+    .toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .index-tabs{display:flex;gap:6px;}
+    .index-tab{font-family:var(--mono);font-size:11px;padding:7px 14px;text-align:center;border:1px solid var(--border);border-radius:2px;cursor:pointer;color:var(--muted);}
+    .index-tab.active{background:rgba(14,116,144,0.12);border-color:var(--accent);color:var(--accent);}
+    select,input[type="text"]{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;border-radius:2px;}
+    input[type="text"]{width:220px;}
+    .count-badge{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto;}
+    .table-wrap{overflow:auto;max-height:calc(100vh - 116px);}
+    table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap;}
+    thead th{position:sticky;top:0;background:var(--surface);z-index:5;}
+    th{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+    th:hover{color:var(--accent);}
+    th.sorted{color:var(--accent);}
+    th:first-child,th:nth-child(2),th:nth-child(3){text-align:left;}
+    td{padding:6px 10px;border-bottom:1px solid rgba(125,146,168,0.15);text-align:right;font-family:var(--mono);font-size:11px;}
+    td:first-child,td:nth-child(2),td:nth-child(3){text-align:left;font-family:var(--sans);}
+    tbody tr{cursor:pointer;}
+    tbody tr:hover{background:rgba(14,116,144,0.08);}
+    .sym-cell{font-family:var(--mono);color:var(--accent);font-weight:700;}
+    .score-pill{display:inline-block;min-width:34px;padding:2px 8px;border-radius:10px;font-weight:700;text-align:center;}
+    .score-green{background:rgba(21,128,61,0.15);color:var(--green);}
+    .score-gold{background:rgba(180,83,9,0.15);color:var(--gold);}
+    .score-red{background:rgba(185,28,28,0.15);color:var(--red);}
+    .loading-line{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:40px;}
+    .foot-note{font-size:10px;color:var(--muted);padding:10px 20px;border-top:1px solid var(--border);background:var(--surface);}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-mark">Β</div><div><span class="logo-text">GENITUS</span><span class="logo-sub">BILANZ-SCREENER · CACHED</span></div></div>
+  <div style="display:flex;align-items:center;gap:10px"><span class="cache-badge" id="cacheBadge">● loading cache...</span><button id="themeToggleBtn" title="Toggle theme">🌙</button></div>
+</header>
+<div class="toolbar">
+  <div class="index-tabs">
+    <div class="index-tab active" id="tabAll" onclick="setIndexFilter('ALL')">Alle</div>
+    <div class="index-tab" id="tabSP500" onclick="setIndexFilter('SP500')">S&amp;P 500</div>
+    <div class="index-tab" id="tabDAX" onclick="setIndexFilter('DAX')">DAX 40</div>
+  </div>
+  <select id="sectorFilter" onchange="renderTable()"><option value="">Alle Sektoren</option></select>
+  <input type="text" id="searchInput" placeholder="Symbol oder Name suchen..." oninput="renderTable()">
+  <span class="count-badge" id="countBadge"></span>
+</div>
+<div class="table-wrap">
+  <table id="screenerTable">
+    <thead><tr id="headRow"></tr></thead>
+    <tbody id="bodyRows"><tr><td colspan="20" class="loading-line">Cache lädt...</td></tr></tbody>
+  </table>
+</div>
+<div class="foot-note">Reine Cache-Ansicht (S&amp;P 500 + DAX 40, batch-gefetcht) — keine Live-Abfrage. Health-Score &amp; Ratios 1:1 aus dem Bilanz-Terminal übernommen. Historische Bilanzanalyse, keine Prognose, keine Anlageberatung. Klick auf eine Zeile öffnet die Detailansicht.</div>
+
+<script>
+  const BILANZ_DATA_URL = 'https://raw.githubusercontent.com/Babybounce500/genitus-ticker-cache/main/bilanz-data.json';
+  const DETAIL_URL = 'https://babybounce500.github.io/genitus-bilanz-cached/';
+
+  (function(){
+    const KEY='genitusTheme:bilanzscreener';
+    function applyTheme(t){ document.documentElement.classList.toggle('dark-theme', t==='dark'); localStorage.setItem(KEY,t); const btn=document.getElementById('themeToggleBtn'); if(btn) btn.textContent = t==='dark' ? '☀' : '🌙'; }
+    window.__theme = localStorage.getItem(KEY) || 'light';
+    applyTheme(window.__theme);
+    document.addEventListener('DOMContentLoaded', function(){ const btn=document.getElementById('themeToggleBtn'); if(btn) btn.addEventListener('click', function(){ window.__theme = window.__theme==='dark' ? 'light' : 'dark'; applyTheme(window.__theme); }); });
+  })();
+
+  // ── Ported 1:1 from core/fundamental.py / core/ratios.py (same as Bilanz-Terminal-Cached.html) ──
+  const ROW_ALIASES = {
+    total_revenue: ["Total Revenue","TotalRevenue","Revenue","Total revenue"],
+    gross_profit: ["Gross Profit","GrossProfit"],
+    operating_income: ["Operating Income","OperatingIncome","Operating Income or Loss"],
+    ebitda: ["EBITDA","Normalized EBITDA"],
+    net_income: ["Net Income","NetIncome","Net Income Common Stockholders"],
+    interest_expense: ["Interest Expense","InterestExpense"],
+    total_assets: ["Total Assets","TotalAssets"],
+    current_assets: ["Total Current Assets","Current Assets","TotalCurrentAssets"],
+    cash: ["Cash And Cash Equivalents","Cash","Cash Cash Equivalents And Short Term Investments"],
+    inventory: ["Inventory"],
+    current_liabilities: ["Total Current Liabilities","Current Liabilities","TotalCurrentLiabilities"],
+    total_liabilities: ["Total Liabilities Net Minority Interest","Total Liab","Total Liabilities"],
+    total_debt: ["Total Debt","TotalDebt"],
+    total_equity: ["Stockholders Equity","Total Stockholder Equity","Common Stock Equity"],
+    operating_cf: ["Operating Cash Flow","Total Cash From Operating Activities","Cash Flow From Continuing Operating Activities"],
+    capex: ["Capital Expenditure","Capital Expenditures","CapitalExpenditure"],
+    free_cash_flow: ["Free Cash Flow","FreeCashFlow"],
+    dividends_paid: ["Cash Dividends Paid","Dividends Paid","Common Stock Dividend Paid"],
+  };
+  function pickRow(rowsObj, key){
+    if(!rowsObj) return null;
+    const aliases = ROW_ALIASES[key] || [key];
+    const lowerMap = {};
+    Object.keys(rowsObj).forEach(k=>lowerMap[k.toLowerCase().trim()]=k);
+    for(const a of aliases){ const al=a.toLowerCase().trim(); if(lowerMap[al]) return rowsObj[lowerMap[al]]; }
+    for(const a of aliases){
+      const aTokens = new Set(a.toLowerCase().trim().split(' '));
+      for(const [low, real] of Object.entries(lowerMap)){
+        const lowTokens = new Set(low.split(' '));
+        let subset = true; aTokens.forEach(t=>{ if(!lowTokens.has(t)) subset=false; });
+        if(subset) return rowsObj[real];
+      }
+    }
+    return null;
+  }
+  function latest(arr){ if(!arr) return null; for(const v of arr){ if(v!=null && !isNaN(v)) return v; } return null; }
+  function safeDiv(a,b,mult=1){ if(a==null||b==null) return null; if(b===0) return null; return a/b*mult; }
+
+  function computeRatios(fin, info){
+    const income = fin.income?.rows, balance = fin.balance?.rows, cashflow = fin.cashflow?.rows;
+    const revenue = latest(pickRow(income,'total_revenue'));
+    const gross = latest(pickRow(income,'gross_profit'));
+    const opInc = latest(pickRow(income,'operating_income'));
+    const ebitda = latest(pickRow(income,'ebitda'));
+    const netInc = latest(pickRow(income,'net_income'));
+    const interestExp = latest(pickRow(income,'interest_expense'));
+    const totalAssets = latest(pickRow(balance,'total_assets'));
+    const curAssets = latest(pickRow(balance,'current_assets'));
+    const curLiab = latest(pickRow(balance,'current_liabilities'));
+    const inv = latest(pickRow(balance,'inventory')) || 0;
+    const cash = latest(pickRow(balance,'cash')) || 0;
+    const totalDebt = latest(pickRow(balance,'total_debt'));
+    const equity = latest(pickRow(balance,'total_equity'));
+    const opCf = latest(pickRow(cashflow,'operating_cf'));
+    let fcf = latest(pickRow(cashflow,'free_cash_flow'));
+    if(fcf==null){ const cx=latest(pickRow(cashflow,'capex')); if(opCf!=null && cx!=null) fcf = opCf + cx; }
+    const taxRate = 0.21;
+    const nopat = opInc!=null ? opInc*(1-taxRate) : null;
+
+    const out = {};
+    out.gross_margin = safeDiv(gross, revenue, 100);
+    out.operating_margin = safeDiv(opInc, revenue, 100);
+    out.ebitda_margin = safeDiv(ebitda, revenue, 100);
+    out.net_margin = safeDiv(netInc, revenue, 100);
+    out.fcf_margin = safeDiv(fcf, revenue, 100);
+    out.roa = safeDiv(netInc, totalAssets, 100);
+    out.roe = safeDiv(netInc, equity, 100);
+    const investedCapital = (equity||0) + (totalDebt||0) - Math.min((cash||0),(totalDebt||0));
+    out.roic = safeDiv(nopat, investedCapital>0?investedCapital:null, 100);
+    out.current_ratio = safeDiv(curAssets, curLiab);
+    out.quick_ratio = (curAssets && curLiab) ? safeDiv(curAssets-inv, curLiab) : null;
+    out.cash_ratio = safeDiv(cash, curLiab);
+    out.debt_equity = safeDiv(totalDebt, equity);
+    out.debt_assets = safeDiv(totalDebt, totalAssets);
+    out.equity_ratio = safeDiv(equity, totalAssets, 100);
+    out.interest_coverage = safeDiv(opInc, interestExp?Math.abs(interestExp):null);
+    out.asset_turnover = safeDiv(revenue, totalAssets);
+    out.fcf_to_debt = totalDebt ? safeDiv(fcf, totalDebt) : null;
+    out.ocf_to_debt = totalDebt ? safeDiv(opCf, totalDebt) : null;
+    out.pe = info?.trailingPE ?? null;
+    out.pb = info?.priceToBook ?? null;
+    out.ev_ebitda = info?.enterpriseToEbitda ?? null;
+    out.beta = info?.beta ?? null;
+    const div = info?.dividendYield;
+    out.dividend_yield = (typeof div==='number') ? (div<1?div*100:div) : null;
+    out.payout_ratio = info?.payoutRatio ? info.payoutRatio*100 : null;
+    return out;
+  }
+  function clip(v,lo=0,hi=100){ return Math.max(lo,Math.min(hi,v)); }
+  function scoreProfitability(r){ let s=0,n=0; if(r.net_margin!=null){s+=clip(50+r.net_margin*2);n++;} if(r.roe!=null){s+=clip(40+r.roe*2);n++;} if(r.roic!=null){s+=clip(40+r.roic*2.5);n++;} return n?s/n:50; }
+  function scoreLiquidity(r){ const s=[]; if(r.current_ratio!=null){ if(r.current_ratio>=2)s.push(85); else if(r.current_ratio>=1.5)s.push(75); else if(r.current_ratio>=1)s.push(60); else if(r.current_ratio>=0.7)s.push(40); else s.push(20);} if(r.quick_ratio!=null){ if(r.quick_ratio>=1.5)s.push(85); else if(r.quick_ratio>=1)s.push(70); else if(r.quick_ratio>=0.7)s.push(55); else s.push(35);} return s.length?s.reduce((a,b)=>a+b,0)/s.length:50; }
+  function scoreLeverage(r){ const s=[]; if(r.debt_equity!=null){ if(r.debt_equity<0.3)s.push(90); else if(r.debt_equity<0.6)s.push(80); else if(r.debt_equity<1)s.push(65); else if(r.debt_equity<2)s.push(45); else s.push(25);} if(r.interest_coverage!=null){ if(r.interest_coverage>10)s.push(90); else if(r.interest_coverage>5)s.push(75); else if(r.interest_coverage>2)s.push(55); else if(r.interest_coverage>1)s.push(35); else s.push(15);} if(r.equity_ratio!=null) s.push(clip(r.equity_ratio+30)); return s.length?s.reduce((a,b)=>a+b,0)/s.length:50; }
+  function scoreEfficiency(r){ const s=[]; if(r.asset_turnover!=null){ if(r.asset_turnover>1.5)s.push(85); else if(r.asset_turnover>1)s.push(75); else if(r.asset_turnover>0.6)s.push(60); else if(r.asset_turnover>0.3)s.push(45); else s.push(30);} if(r.fcf_margin!=null) s.push(clip(50+r.fcf_margin*2.5)); return s.length?s.reduce((a,b)=>a+b,0)/s.length:50; }
+  function scoreValuation(r){ const s=[]; if(r.pe!=null&&r.pe>0){ if(r.pe<12)s.push(85); else if(r.pe<18)s.push(75); else if(r.pe<25)s.push(60); else if(r.pe<40)s.push(45); else s.push(25);} if(r.pb!=null&&r.pb>0){ if(r.pb<1.5)s.push(85); else if(r.pb<3)s.push(70); else if(r.pb<5)s.push(55); else s.push(35);} if(r.ev_ebitda!=null&&r.ev_ebitda>0){ if(r.ev_ebitda<10)s.push(85); else if(r.ev_ebitda<15)s.push(70); else if(r.ev_ebitda<25)s.push(55); else s.push(35);} return s.length?s.reduce((a,b)=>a+b,0)/s.length:50; }
+  function healthScore(r){
+    const sub = { profit:scoreProfitability(r), liq:scoreLiquidity(r), lev:scoreLeverage(r), eff:scoreEfficiency(r), val:scoreValuation(r) };
+    const weights = { profit:0.30, liq:0.15, lev:0.20, eff:0.15, val:0.20 };
+    let total=0; Object.keys(sub).forEach(k=>total+=sub[k]*weights[k]);
+    return { total: Math.round(total), ...sub };
+  }
+
+  // ── Screener-specific state ──
+  const COLUMNS = [
+    { key:'symbol', label:'Symbol', align:'left', sortable:true },
+    { key:'name', label:'Name', align:'left', sortable:true },
+    { key:'sector', label:'Sektor', align:'left', sortable:true },
+    { key:'total', label:'Score', fmt:v=>v==null?'—':v.toFixed(0), sortable:true },
+    { key:'profit', label:'Profit.', fmt:v=>v==null?'—':v.toFixed(0), sortable:true },
+    { key:'liq', label:'Liquid.', fmt:v=>v==null?'—':v.toFixed(0), sortable:true },
+    { key:'lev', label:'Verschuld.', fmt:v=>v==null?'—':v.toFixed(0), sortable:true },
+    { key:'eff', label:'Effizienz', fmt:v=>v==null?'—':v.toFixed(0), sortable:true },
+    { key:'val', label:'Bewertung', fmt:v=>v==null?'—':v.toFixed(0), sortable:true },
+    { key:'net_margin', label:'Nettomarge', fmt:v=>v==null?'—':v.toFixed(1)+'%', sortable:true },
+    { key:'roe', label:'ROE', fmt:v=>v==null?'—':v.toFixed(1)+'%', sortable:true },
+    { key:'roic', label:'ROIC', fmt:v=>v==null?'—':v.toFixed(1)+'%', sortable:true },
+    { key:'fcf_margin', label:'FCF-Marge', fmt:v=>v==null?'—':v.toFixed(1)+'%', sortable:true },
+    { key:'current_ratio', label:'Current R.', fmt:v=>v==null?'—':v.toFixed(2), sortable:true },
+    { key:'quick_ratio', label:'Quick R.', fmt:v=>v==null?'—':v.toFixed(2), sortable:true },
+    { key:'debt_equity', label:'Debt/Eq.', fmt:v=>v==null?'—':v.toFixed(2), sortable:true },
+    { key:'interest_coverage', label:'Zinsdeck.', fmt:v=>v==null?'—':v.toFixed(1)+'x', sortable:true },
+    { key:'equity_ratio', label:'EK-Quote', fmt:v=>v==null?'—':v.toFixed(1)+'%', sortable:true },
+    { key:'pe', label:'KGV', fmt:v=>v==null?'—':v.toFixed(1), sortable:true },
+    { key:'pb', label:'KBV', fmt:v=>v==null?'—':v.toFixed(1), sortable:true },
+    { key:'ev_ebitda', label:'EV/EBITDA', fmt:v=>v==null?'—':v.toFixed(1), sortable:true },
+    { key:'dividend_yield', label:'Div-Yield', fmt:v=>v==null?'—':v.toFixed(2)+'%', sortable:true },
+    { key:'payout_ratio', label:'Payout', fmt:v=>v==null?'—':v.toFixed(0)+'%', sortable:true },
+  ];
+
+  let rowsData = [];
+  let indexFilter = 'ALL';
+  let sortKey = 'total';
+  let sortDir = 'desc';
+
+  function buildHead(){
+    const head = document.getElementById('headRow');
+    head.innerHTML = COLUMNS.map(c=>{
+      const arrow = sortKey===c.key ? (sortDir==='asc'?' ▲':' ▼') : '';
+      return `<th class="${sortKey===c.key?'sorted':''}" onclick="sortBy('${c.key}')">${c.label}${arrow}</th>`;
+    }).join('');
+  }
+  window.sortBy = function(key){
+    if(sortKey===key){ sortDir = sortDir==='asc'?'desc':'asc'; }
+    else { sortKey = key; sortDir = 'desc'; }
+    buildHead();
+    renderTable();
+  };
+  window.setIndexFilter = function(idx){
+    indexFilter = idx;
+    document.getElementById('tabAll').classList.toggle('active', idx==='ALL');
+    document.getElementById('tabSP500').classList.toggle('active', idx==='SP500');
+    document.getElementById('tabDAX').classList.toggle('active', idx==='DAX');
+    renderTable();
+  };
+  window.openDetail = function(sym){
+    window.open(`${DETAIL_URL}?sym=${encodeURIComponent(sym)}`, '_blank');
+  };
+
+  function scoreClass(v){ if(v==null) return ''; return v>=70?'score-green':v>=45?'score-gold':'score-red'; }
+
+  function renderTable(){
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const sector = document.getElementById('sectorFilter').value;
+    let rows = rowsData.filter(r=>(indexFilter==='ALL'||r.index===indexFilter) && (!sector||r.sector===sector) && (!q || r.symbol.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)));
+    rows.sort((a,b)=>{
+      const av=a[sortKey], bv=b[sortKey];
+      if(av==null && bv==null) return 0;
+      if(av==null) return 1;
+      if(bv==null) return -1;
+      if(typeof av==='string') return sortDir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      return sortDir==='asc' ? av-bv : bv-av;
+    });
+    document.getElementById('countBadge').textContent = `${rows.length} von ${rowsData.length} Symbolen`;
+    const body = document.getElementById('bodyRows');
+    if(!rows.length){ body.innerHTML = `<tr><td colspan="${COLUMNS.length}" class="loading-line">Keine Treffer.</td></tr>`; return; }
+    body.innerHTML = rows.map(r=>{
+      return `<tr onclick="openDetail('${r.symbol}')">` + COLUMNS.map(c=>{
+        if(c.key==='symbol') return `<td class="sym-cell">${r.symbol}</td>`;
+        if(c.key==='name') return `<td>${r.name}</td>`;
+        if(c.key==='sector') return `<td>${r.sector||'—'}</td>`;
+        if(c.key==='total') return `<td><span class="score-pill ${scoreClass(r.total)}">${r.total==null?'—':r.total}</span></td>`;
+        return `<td>${c.fmt(r[c.key])}</td>`;
+      }).join('') + `</tr>`;
+    }).join('');
+  }
+
+  async function loadCache(){
+    try{
+      const res = await fetch(BILANZ_DATA_URL);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      rowsData = Object.entries(data).filter(([sym,d])=>d.income && d.income.columns && d.income.columns.length).map(([sym,d])=>{
+        const info = { trailingPE:d.info?.trailingPE, beta:d.info?.beta, dividendYield:d.info?.dividendYield, payoutRatio:d.info?.payoutRatio, priceToBook:d.info?.priceToBook, enterpriseToEbitda:d.info?.enterpriseToEbitda };
+        const ratios = computeRatios(d, info);
+        const health = healthScore(ratios);
+        return { symbol:sym, name:d.name, sector:d.sector||d.info?.yahooSector||'', index:d.index, ...ratios, ...health };
+      });
+      document.getElementById('cacheBadge').textContent = `● ${rowsData.length} Symbole gecacht`;
+      const sectors = [...new Set(rowsData.map(r=>r.sector).filter(Boolean))].sort();
+      const sel = document.getElementById('sectorFilter');
+      sectors.forEach(s=>{ const opt = document.createElement('option'); opt.value=s; opt.textContent=s; sel.appendChild(opt); });
+      buildHead();
+      renderTable();
+    }catch(e){
+      document.getElementById('cacheBadge').textContent = '● Cache-Fehler';
+      document.getElementById('bodyRows').innerHTML = `<tr><td colspan="${COLUMNS.length}" class="loading-line">Cache konnte nicht geladen werden: ${e.message}</td></tr>`;
+    }
+  }
+
+  loadCache();
+</script>
+</body>
+</html>
