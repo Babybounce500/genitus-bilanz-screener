@@ -52,12 +52,26 @@
 <div class="toolbar">
   <div class="index-tabs">
     <div class="index-tab active" id="tabAll" onclick="setIndexFilter('ALL')">Alle</div>
-    <div class="index-tab" id="tabSP500" onclick="setIndexFilter('SP500')">S&amp;P 500</div>
-    <div class="index-tab" id="tabDAX" onclick="setIndexFilter('DAX')">DAX 40</div>
-    <div class="index-tab" id="tabCAC40" onclick="setIndexFilter('CAC40')">CAC 40</div>
-    <div class="index-tab" id="tabNASDAQ100" onclick="setIndexFilter('NASDAQ100')">NASDAQ-100</div>
-    <div class="index-tab" id="tabMDAX" onclick="setIndexFilter('MDAX')">MDAX</div>
   </div>
+  <select id="indexSelect" onchange="setIndexFilter(this.value)">
+    <option value="ALL">Alle Indizes</option>
+    <option value="SP500">S&amp;P 500 (US)</option>
+    <option value="DAX">DAX 40 (DE)</option>
+    <option value="MDAX">MDAX (DE)</option>
+    <option value="CAC40">CAC 40 (FR)</option>
+    <option value="NASDAQ100">NASDAQ-100 (US)</option>
+    <option value="FTSE100">FTSE 100 (UK)</option>
+    <option value="SMI">SMI (CH)</option>
+    <option value="IBEX35">IBEX 35 (ES)</option>
+    <option value="FTSEMIB">FTSE MIB (IT)</option>
+    <option value="AEX">AEX (NL)</option>
+    <option value="OMXS30">OMX Stockholm 30 (SE)</option>
+    <option value="OMXC25">OMX Copenhagen 25 (DK)</option>
+    <option value="BEL20">BEL 20 (BE)</option>
+    <option value="PSI20">PSI-20 (PT)</option>
+    <option value="TSX60">S&amp;P/TSX 60 (CA)</option>
+    <option value="HANGSENG">Hang Seng (HK)</option>
+  </select>
   <select id="sectorFilter" onchange="renderTable()"><option value="">Alle Sektoren</option></select>
   <input type="text" id="searchInput" placeholder="Symbol oder Name suchen..." oninput="renderTable()">
   <span class="count-badge" id="countBadge"></span>
@@ -232,11 +246,7 @@
   window.setIndexFilter = function(idx){
     indexFilter = idx;
     document.getElementById('tabAll').classList.toggle('active', idx==='ALL');
-    document.getElementById('tabSP500').classList.toggle('active', idx==='SP500');
-    document.getElementById('tabDAX').classList.toggle('active', idx==='DAX');
-    document.getElementById('tabCAC40').classList.toggle('active', idx==='CAC40');
-    document.getElementById('tabNASDAQ100').classList.toggle('active', idx==='NASDAQ100');
-    document.getElementById('tabMDAX').classList.toggle('active', idx==='MDAX');
+    document.getElementById('indexSelect').value = idx;
     renderTable();
   };
   window.openDetail = function(sym){
