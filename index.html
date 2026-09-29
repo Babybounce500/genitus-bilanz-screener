@@ -54,6 +54,9 @@
     <div class="index-tab active" id="tabAll" onclick="setIndexFilter('ALL')">Alle</div>
     <div class="index-tab" id="tabSP500" onclick="setIndexFilter('SP500')">S&amp;P 500</div>
     <div class="index-tab" id="tabDAX" onclick="setIndexFilter('DAX')">DAX 40</div>
+    <div class="index-tab" id="tabCAC40" onclick="setIndexFilter('CAC40')">CAC 40</div>
+    <div class="index-tab" id="tabNASDAQ100" onclick="setIndexFilter('NASDAQ100')">NASDAQ-100</div>
+    <div class="index-tab" id="tabMDAX" onclick="setIndexFilter('MDAX')">MDAX</div>
   </div>
   <select id="sectorFilter" onchange="renderTable()"><option value="">Alle Sektoren</option></select>
   <input type="text" id="searchInput" placeholder="Symbol oder Name suchen..." oninput="renderTable()">
@@ -231,6 +234,9 @@
     document.getElementById('tabAll').classList.toggle('active', idx==='ALL');
     document.getElementById('tabSP500').classList.toggle('active', idx==='SP500');
     document.getElementById('tabDAX').classList.toggle('active', idx==='DAX');
+    document.getElementById('tabCAC40').classList.toggle('active', idx==='CAC40');
+    document.getElementById('tabNASDAQ100').classList.toggle('active', idx==='NASDAQ100');
+    document.getElementById('tabMDAX').classList.toggle('active', idx==='MDAX');
     renderTable();
   };
   window.openDetail = function(sym){
